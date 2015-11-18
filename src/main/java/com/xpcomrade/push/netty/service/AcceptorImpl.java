@@ -1,22 +1,26 @@
 package com.xpcomrade.push.netty.service;
 
+import com.xpcomrade.push.netty.handler.inbound.DispatchInboundHandler;
+import com.xpcomrade.push.util.LangUtil;
+import com.xpcomrade.push.util.Options;
 import com.xpcomrade.socket.netty.time.TimeServerHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
+import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.timeout.IdleStateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -25,7 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Copyright (c) 2015, xpcomrade@gmail.com All Rights Reserved.
  * Description: Acceptor实现类. <br/>
  */
-public class AcceptorImpl implements Acceptor {
+public class AcceptorImpl extends AbstractService implements Acceptor {
     private Logger logger = LoggerFactory.getLogger(getClass());
 
     private ServerBootstrap bootstrap;
@@ -43,9 +47,29 @@ public class AcceptorImpl implements Acceptor {
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel ch) throws Exception {
+                        ChannelPipeline pipeline = ch.pipeline();
+                        for (Map.Entry<String, ChannelHandler> entry : getHandlers().entrySet()) {
+                            pipeline.addLast(entry.getKey(), entry.getValue());
+                        }
+
+                        // 注册链路空闲检测Handler
+                        Integer writeIdleTime = LangUtil.parseInt(getOption(Options.WRITE_IDLE_TIME));
+                        Integer readIdleTime = LangUtil.parseInt(getOption(Options.READ_IDLE_TIME));
+                        if (writeIdleTime == null) {
+                            writeIdleTime = 10;
+                        }
+                        if (readIdleTime == null) {
+                            // 默认为写空闲的3倍
+                            readIdleTime = writeIdleTime * 3;
+                        }
+
+                        pipeline.addLast("timeout", new IdleStateHandler(readIdleTime, writeIdleTime, 0));
+                        pipeline.addLast("idleHandler", null);
+
+                        // 注册事件分发Handler
+                        pipeline.addLast("dispatchHandler", new DispatchInboundHandler());
                     }
-                })
-                .option(ChannelOption.SO_BACKLOG, 128);
+                });
 
         List<ChannelFuture> retChannels = new ArrayList<ChannelFuture>();
         for(SocketAddress address : addressArray) {
