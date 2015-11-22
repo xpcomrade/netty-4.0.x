@@ -1,5 +1,6 @@
 package com.xpcomrade.push.netty.service;
 
+import com.xpcomrade.push.netty.handler.HeartbeatHandler;
 import com.xpcomrade.push.netty.handler.inbound.DispatchInboundHandler;
 import com.xpcomrade.push.util.LangUtil;
 import com.xpcomrade.push.util.Options;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -63,8 +65,8 @@ public class AcceptorImpl extends AbstractService implements Acceptor {
                             readIdleTime = writeIdleTime * 3;
                         }
 
-                        pipeline.addLast("timeout", new IdleStateHandler(readIdleTime, writeIdleTime, 0));
-                        pipeline.addLast("idleHandler", null);
+                        pipeline.addLast("idlehandler", new IdleStateHandler(readIdleTime, writeIdleTime, 30, TimeUnit.SECONDS));
+                        pipeline.addLast("hearbeat", new HeartbeatHandler());
 
                         // 注册事件分发Handler
                         pipeline.addLast("dispatchHandler", new DispatchInboundHandler());
