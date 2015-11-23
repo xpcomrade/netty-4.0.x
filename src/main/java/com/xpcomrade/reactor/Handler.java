@@ -50,11 +50,15 @@ public class Handler implements Runnable {
             StringBuilder sb = new StringBuilder(new String(bytes));
             input.clear();
             clientName = sb.toString().toLowerCase();
+            System.out.println(String.format("received msg：%s", clientName));
         }
+
+        selectionKey.interestOps(SelectionKey.OP_WRITE);
     }
 
     void send() throws IOException {
         ByteBuffer out = ByteBuffer.wrap(("hi, " + clientName + "\n").getBytes());
+        out.flip();
         socketChannel.write(out);
     }
 }

@@ -26,7 +26,6 @@ public class Client {
         Socket clientSocket = null;
         PrintWriter out = null;
         BufferedReader in = null;
-
         try {
             clientSocket = new Socket(hostIp, hostPort);
             out = new PrintWriter(clientSocket.getOutputStream(), true);
@@ -41,19 +40,14 @@ public class Client {
 
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
         String userInput;
-
         System.out.println("Client connected to host : " + hostIp + " port: " + hostPort);
-        System.out.println("Type (\"Bye\" to quit)");
         System.out.println("Tell what your name is to the Server.....");
 
         while ((userInput = stdIn.readLine()) != null) {
-
             out.println(userInput);
-
             // Break when client says Bye.
             if (userInput.equalsIgnoreCase("Bye"))
                 break;
-
             System.out.println("Server says: " + in.readLine());
         }
 
@@ -64,7 +58,6 @@ public class Client {
     }
 
     public static void main(String[] args) throws IOException {
-
         Client client = new Client("127.0.0.1", 8888);
         client.runClient();
     }
