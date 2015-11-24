@@ -20,14 +20,15 @@ public class BIOTimeClient {
         try {
             socket = new Socket(Constant.HOST, Constant.PORT);
             socket.setTcpNoDelay(true);
+            out = new PrintWriter(socket.getOutputStream());
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out = new PrintWriter(socket.getOutputStream(), true);
 
             out.println("QUERY TIME ORDER");
+            out.flush();
             System.out.println("Send order to server succeed");
+
             String resp = in.readLine();
             System.out.println("Now is ：" + resp);
-
         } catch (IOException e) {
             if (in != null) {
                 try {

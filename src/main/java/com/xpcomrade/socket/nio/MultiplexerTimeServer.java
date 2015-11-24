@@ -99,7 +99,7 @@ public class MultiplexerTimeServer implements Runnable {
 
                     String body = new String(bytes, "UTF-8");
                     System.out.println("The time server receive order：" + body);
-                    String currentTime = "QUERY TIME ORDER".equalsIgnoreCase(body) ? new Date(System.currentTimeMillis()).toString() : "BAD ORDER";
+                    String currentTime = "QUERY TIME ORDER".equalsIgnoreCase(body) ? new Date(System.currentTimeMillis()).toString() : "BAD ORDER\n";
                     doWrite(socketChannel, currentTime);
                 } else if (readBytes < 0) {
                     key.cancel();
@@ -114,7 +114,7 @@ public class MultiplexerTimeServer implements Runnable {
         ByteBuffer byteBuffer = ByteBuffer.allocate(bytes.length);
         byteBuffer.clear();
         byteBuffer.put(bytes);
-        byteBuffer.flip();
+        //byteBuffer.flip();
         channel.write(byteBuffer);
     }
 }

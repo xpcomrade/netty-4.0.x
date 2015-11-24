@@ -30,31 +30,24 @@ public class Client {
             clientSocket = new Socket(hostIp, hostPort);
             out = new PrintWriter(clientSocket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            System.out.println("Client connected to host : " + hostIp + " port: " + hostPort);
+            out.println("i am client");
+            out.flush();
+
+            String response = in.readLine();
+            System.out.println("Server says: " + response);
         } catch (UnknownHostException e) {
             System.err.println("Unknown host: " + hostIp);
             System.exit(1);
         } catch (IOException e) {
             System.err.println("Couldn't connect to: " + hostIp);
             System.exit(1);
+        }  finally {
+            out.close();
+            in.close();
         }
 
-        BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
-        String userInput;
-        System.out.println("Client connected to host : " + hostIp + " port: " + hostPort);
-        System.out.println("Tell what your name is to the Server.....");
 
-        while ((userInput = stdIn.readLine()) != null) {
-            out.println(userInput);
-            // Break when client says Bye.
-            if (userInput.equalsIgnoreCase("Bye"))
-                break;
-            System.out.println("Server says: " + in.readLine());
-        }
-
-        out.close();
-        in.close();
-        stdIn.close();
-        clientSocket.close();
     }
 
     public static void main(String[] args) throws IOException {

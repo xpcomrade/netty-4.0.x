@@ -20,11 +20,11 @@ public class Handler implements Runnable {
     String clientName = "";
 
     public Handler(Selector selector, SocketChannel channel) throws IOException{
-        this.socketChannel = channel;
-        this.socketChannel.configureBlocking(false);
-        this.selectionKey = socketChannel.register(selector, 0);
+        socketChannel = channel;
+        socketChannel.configureBlocking(false);
+        selectionKey = socketChannel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
         selectionKey.attach(this);
-        selectionKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+        //selectionKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
         selector.wakeup();
     }
 
@@ -32,16 +32,20 @@ public class Handler implements Runnable {
     public void run() {
         try {
             if (selectionKey.isReadable()) {
-                read();
-            } else if (selectionKey.isWritable()) {
-                send();
+                handler();
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    void read() throws IOException{
+    void handler() throws IOException{
+        if (read()) {
+            send();
+        };
+    }
+
+    boolean read() throws IOException{
         int readCount = socketChannel.read(input);
         if (readCount > 0) {
             input.flip();
@@ -50,15 +54,15 @@ public class Handler implements Runnable {
             StringBuilder sb = new StringBuilder(new String(bytes));
             input.clear();
             clientName = sb.toString().toLowerCase();
-            System.out.println(String.format("received msg：%s", clientName));
-        }
+            System.out.println(String.format("client say ：%s", clientName));
 
-        selectionKey.interestOps(SelectionKey.OP_WRITE);
+            return true;
+        }
+        return false;
     }
 
-    void send() throws IOException {
+    void send() throws IOException{
         ByteBuffer out = ByteBuffer.wrap(("hi, " + clientName + "\n").getBytes());
-        out.flip();
         socketChannel.write(out);
     }
 }
